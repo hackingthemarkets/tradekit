@@ -1,0 +1,88 @@
+# data analysis libraries
+numpy
+scipy
+pandas
+pandas-datareader
+
+# technical analysis, indicator libraries
+ta
+ta-lib
+bta-lib
+pandas-ta
+tulipy
+
+# database connection, ORM
+psycopg2
+sqlalchemy
+
+# broker API libraries
+alpaca-trade-api
+python-binance
+tda-api
+ib_insync
+robin-stocks
+
+# data providers
+intrinio-sdk
+polygon-api-client
+iexfinance
+yfinance
+quandl
+alpha-vantage
+sec-edgar-downloader
+
+# visualization
+matplotlib
+plotly
+dash
+mplfinance
+jupyterlab
+pillow
+
+# backtesting
+backtrader
+pyalgotrade
+bt
+
+# portfolio, performance analysis
+pyfolio
+finquant
+
+# web frameworks and extensions
+fastapi
+flask
+flask-cors
+flask-login
+flask-sqlalchemy
+itsdangerous
+aiofiles
+chalice
+
+# servers, task queue
+uvicorn
+gunicorn
+celery
+
+# networking
+requests
+boto3
+urllib3
+websocket-client
+websockets
+
+# other data stores, formats
+redis
+h5py
+
+# utilities
+beautifulsoup4
+pendulum
+click
+passlib
+
+# machine learning
+tensorflow
+scikit-learn
+keras
+torch
+opencv-python
