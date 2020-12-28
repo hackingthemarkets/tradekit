@@ -1,6 +1,6 @@
 # TradeKit
 
-Note: I am currently gathering feedback on what to include in this image. Let me know your thoughts. [Demo Video](https://www.youtube.com/watch?v=uiPMCJ0MEbM)
+Note: I am currently gathering feedback on what to include in this image, this is not "final". I will add more packages based on feedback and eventually freeze the versions. Let me know your thoughts. [Demo Video](https://www.youtube.com/watch?v=uiPMCJ0MEbM)
 
 The goal of TradeKit is to maintain a collection of open source server components and Python libraries for building your own financial applications, data analysis tools, and trading bots. These tools are packaged in a Docker container so that anyone can easily get up and running locally and develop with these components regardless of their operating system. Once a developer has successfully built their project locally, the Docker container can easily be deployed to a server (such as VPS on DigitalOcean or a cloud provider like AWS) for production use. 
 
