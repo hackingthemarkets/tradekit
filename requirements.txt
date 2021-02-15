@@ -23,66 +23,67 @@ ib_insync
 robin-stocks
 
 # data providers
-intrinio-sdk
+#intrinio-sdk
 polygon-api-client
-iexfinance
-yfinance
-quandl
-alpha-vantage
-sec-edgar-downloader
+#iexfinance
+#yfinance
+#quandl
+#alpha-vantage
+#sec-edgar-downloader
 
 # visualization
-matplotlib
-plotly
-dash
-mplfinance
-jupyterlab
-pillow
+#matplotlib
+#plotly
+#dash
+#mplfinance
+#jupyterlab
+#pillow
 
 # backtesting
-backtrader
-pyalgotrade
-bt
+#backtrader
+#pyalgotrade
+#bt
 
 # portfolio, performance analysis
-pyfolio
-finquant
+#pyfolio
+#finquant
 
 # web frameworks and extensions
 fastapi
-flask
-flask-cors
-flask-login
-flask-sqlalchemy
-itsdangerous
+#flask
+#flask-cors
+#flask-login
+#flask-sqlalchemy
+#itsdangerous
+jinja2
 aiofiles
-chalice
+#chalice
 
 # servers, task queue
 uvicorn
-gunicorn
-celery
+#gunicorn
+#celery
 
 # networking
 requests
-boto3
-urllib3
+#boto3
+#urllib3
 websocket-client
 websockets
 
 # other data stores, formats
-redis
-h5py
+#redis
+#h5py
 
 # utilities
-beautifulsoup4
-pendulum
-click
-passlib
+#beautifulsoup4
+#pendulum
+#click
+#passlib
 
 # machine learning
-tensorflow
-scikit-learn
-keras
-torch
-opencv-python
+#tensorflow
+#scikit-learn
+#keras
+#torch
+# opencv-python
