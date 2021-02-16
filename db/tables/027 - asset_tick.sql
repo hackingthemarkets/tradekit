@@ -1,0 +1,12 @@
+CREATE TABLE IF NOT EXISTS asset_tick  
+(
+  id SERIAL PRIMARY KEY,
+  dt TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+  asset_id INTEGER NOT NULL,
+  source source,
+  bid NUMERIC NOT NULL,
+  ask NUMERIC NOT NULL,
+  bid_vol NUMERIC,
+  ask_vol NUMERIC,
+  CONSTRAINT fk_asset FOREIGN KEY(asset_id) REFERENCES asset(id)
+);

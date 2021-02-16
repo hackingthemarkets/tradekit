@@ -1,0 +1,36 @@
+{
+    "db": {
+        "development" : {
+            "connection": {
+                "host": "timescale.tradekit_default",
+                "port": 5432,
+                "user": "lulosol",
+                "password": "lulosol",
+                "database": "lulosol"
+            }
+        },
+        "test" : {
+            "connection": {
+                "host": "172.93.48.144",
+                "port": 5432,
+                "user": "lulosol",
+                "password": "lulosol",
+                "database": "lulosol"
+            }
+        },
+        "production" : {
+            "connection": {
+                "host": "172.93.48.144",
+                "port": 5432,
+                "user": "lulosol",
+                "password": "lulosol",
+                "database": "lulosol"
+            }
+        }
+    },
+    "session": {
+        "public_key": "bitsyspider",
+        "private_key": "bitsyspider",
+        "expiry_seconds": 86400
+    }
+}
