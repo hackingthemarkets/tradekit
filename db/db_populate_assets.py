@@ -1,12 +1,13 @@
 import os
 import json
-from common.dbwrapper import *
+import dbwrapper as dbw
 import alpaca_trade_api as trade_api
 from config import *
 
-initDbConfig()
+dbw.initDbConfig()
+dbw.initDb()
 
-with dbEngine.connect() as conn:
+with dbw.dbEngine.connect() as conn:
     result = conn.execute('SELECT symbol, name FROM asset')
     symbols = [row['symbol'] for row in result.rows]
 

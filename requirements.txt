@@ -23,10 +23,10 @@ ib_insync
 robin-stocks
 
 # data providers
-#intrinio-sdk
+intrinio-sdk
 polygon-api-client
 #iexfinance
-#yfinance
+yfinance
 #quandl
 #alpha-vantage
 #sec-edgar-downloader
@@ -36,7 +36,7 @@ polygon-api-client
 #plotly
 #dash
 #mplfinance
-#jupyterlab
+jupyterlab
 #pillow
 
 # backtesting
