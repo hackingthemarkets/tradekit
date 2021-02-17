@@ -10,3 +10,4 @@ CREATE TABLE IF NOT EXISTS asset_indicators
   sma_50 NUMERIC,
   rsi_14 NUMERIC,
   CONSTRAINT fk_asset_price FOREIGN KEY(asset_price_id) REFERENCES asset_price(id)
+);

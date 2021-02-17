@@ -13,3 +13,4 @@ CREATE TABLE IF NOT EXISTS asset_price
   close NUMERIC NOT NULL,
   volume NUMERIC NOT NULL,
   CONSTRAINT fk_asset FOREIGN KEY(asset_id) REFERENCES asset(id)
+);

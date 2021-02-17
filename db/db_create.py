@@ -1,6 +1,6 @@
 import os
 import json
-from dbwrapper import *
+import dbwrapper as dbw
 
 def initSchema():
     basepath = 'tables'
@@ -14,13 +14,13 @@ def initSchema():
                 # TODO: Can put this in a function and just yield entries intsead
                 with open(entry, 'r') as sqlFile:
                     query = sqlFile.read()
-                    with dbEngine.connect() as conn:
+                    with dbw.dbEngine.connect() as conn:
                         result = conn.execute(query)
     
     print('Done initializing')
 
-initDbConfig()
-initDb()
+dbw.initDbConfig()
+dbw.initDb()
 initSchema()
 
 # #seed future strategies here
