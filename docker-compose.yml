@@ -11,8 +11,6 @@ services:
       - POSTGRES_USER=lulosol
       - POSTGRES_PASSWORD=lulosol
       - POSTGRES_DB=lulosol
-    volumes:
-      - ./db/tables/init.sql:/docker-entrypoint-initdb.d/init.sql
   web:
     build: .
     command: uvicorn web.main:app --host 0.0.0.0 --port 80 --reload

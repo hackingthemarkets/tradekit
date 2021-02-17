@@ -1,4 +1,9 @@
-CREATE TYPE timespan AS ENUM('minute', 'hour', 'day', 'week', 'month', 'quarter', 'year');
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'timespan') THEN
+        CREATE TYPE timespan AS ENUM('minute', 'hour', 'day', 'week', 'month', 'quarter', 'year');
+    END IF;
+END$$;
 
 CREATE TABLE IF NOT EXISTS asset_price 
 (

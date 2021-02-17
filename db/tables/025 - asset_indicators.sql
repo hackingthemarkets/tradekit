@@ -1,5 +1,10 @@
 
-CREATE TYPE i_lib AS ENUM('tulip', 'ta-lib');
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'i_lib') THEN
+        CREATE TYPE i_lib AS ENUM('tulip', 'ta-lib');
+    END IF;
+END$$;
 
 CREATE TABLE IF NOT EXISTS asset_indicators 
 (

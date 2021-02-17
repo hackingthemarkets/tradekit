@@ -17,7 +17,7 @@ def initSchema():
                     with dbw.dbEngine.connect() as conn:
                         result = conn.execute(query)
     
-    print('Done initializing')
+    print('Done initializing!')
 
 dbw.initDbConfig()
 dbw.initDb()
