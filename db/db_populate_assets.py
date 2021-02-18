@@ -38,6 +38,10 @@ with dbw.dbEngine.connect() as conn:
 
     #Alpca mainly for flags, but just in case we need to add missing ones
     al_assets = alpaca.get_all_assets()
+    
+    #since it runs back-to-back, let's refresh after polygon
+    result = conn.execute("""SELECT symbol, id FROM asset""")
+    symbols = [row['symbol'] for row in result]
 
     for al_asset in al_assets:
         try:

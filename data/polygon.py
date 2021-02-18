@@ -1,15 +1,35 @@
 import sys
 sys.path.append('/app')
 from data.api_data import POLYGON_API_KEY
-import datetime
+from datetime import datetime, date, timedelta
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 import pandas as pd
 import math
 
-# URL for all the tickers on Polygon
+# URL for all the tickers
 POLYGON_TICKERS_URL = 'https://api.polygon.io/v2/reference/tickers?page={}&apiKey={}'
+
+# URL for aggregate data - default limit 5000. Adjusted for splits and dividents
+POLYGON_AGGS_URL = 'https://api.polygon.io/v2/aggs/ticker/{}/range/{}/{}/{}/{}?unadjusted=false&sort=asc&apiKey={}'
+
+# URL For specific, but it looks like they are all served by the same endpoint, regardless of the type
+POLYGON_STOCKS_AGGS_URL = 'https://api.polygon.io/v2/aggs/ticker/{}/range/{}/{}/{}/{}?unadjusted=false&sort=asc&apiKey={}'
+POLYGON_FOREX_AGGS_URL  = 'https://api.polygon.io/v2/aggs/ticker/{}/range/{}/{}/{}/{}?unadjusted=false&sort=asc&apiKey={}'
+POLYGON_CRYPTO_AGGS_URL = 'https://api.polygon.io/v2/aggs/ticker/{}/range/{}/{}/{}/{}?unadjusted=false&sort=asc&apiKey={}'
+
+def get_agg_bars(symbol, period, multiplier, start, end):
+    session = requests.Session()
+    try:
+        r = session.get(POLYGON_AGGS_URL.format(symbol, multiplier, period, start.strftime("%Y-%m-%d"), end.strftime("%Y-%m-%d"), POLYGON_API_KEY))
+        if r:
+            data = r.json()
+            return data['results']
+        return None
+    except:
+        print('****** getting bars errored for symbol: ' + str(symbol))
+        return None
 
 def get_all_tickers():
     page = 1
@@ -36,4 +56,4 @@ def get_all_tickers():
     return tickers
 
 def ts_to_datetime(ts) -> str:
-    return datetime.datetime.fromtimestamp(ts / 1000.0).strftime('%Y-%m-%d %H:%M')
+    return datetime.fromtimestamp(ts / 1000.0).strftime('%Y-%m-%d %H:%M')
