@@ -1,26 +1,54 @@
+import sys
+sys.path.append('/app')
 import os
 import json
+import pprint
 import dbwrapper as dbw
 import alpaca_trade_api as trade_api
-from config import *
+import pandas as pd
+import data.polygon as d_poly
+import data.alpaca as alpaca
 
-dbw.initDbConfig()
 dbw.initDb()
 
 with dbw.dbEngine.connect() as conn:
-    result = conn.execute('SELECT symbol, name FROM asset')
-    symbols = [row['symbol'] for row in result.rows]
+    #all the existing symbols and flags so that we don't add ones that already exist
+    result = conn.execute("""SELECT symbol, id FROM asset""")
+    symbols = [row['symbol'] for row in result]
 
-    api = trade_api.REST(ALPACA_API_KEY, ALPACA_SECRET_KEY,
-                        base_url=ALPACA_END_POINT)
-    assets = api.list_assets()
+    #first pass using polygon since it has a full univerise
+    assets = d_poly.get_all_tickers()
 
     for asset in assets:
         try:
-            if asset.status == 'active' and asset.tradable and asset.symbol not in symbols:
-                print(f"New asset {asset.symbol} {asset.name}")
-                conn.execute("INSERT INTO asset (alpaca_id, exchange, symbol, name) VALUES (?, ?, ?, ?)",
-                            (asset.id, asset.exchange, asset.symbol, asset.name))
+            if asset['active'] == True and asset['ticker'] not in symbols:
+                print(f"Polygon New asset {asset['primaryExch']} {asset['ticker']} {asset['name']} {asset['market']} {asset['locale']} {asset['currency']}")
+                #type is included at times
+                if 'type' not in asset:
+                    conn.execute("""
+                        INSERT INTO asset (exchange, symbol, name, market, locale, currency, source) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                        """, (asset['primaryExch'], asset['ticker'], asset['name'], asset['market'], asset['locale'], asset['currency'],'polygon'))
+                else:
+                    conn.execute("""
+                        INSERT INTO asset (exchange, symbol, name, market, locale, currency, source, type) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                        """, (asset['primaryExch'], asset['ticker'], asset['name'], asset['market'], asset['locale'], asset['currency'],'polygon', asset['type']))
         except Exception as e:
-            print(asset.symbol)
+            print(asset['ticker'])
+            print(e)
+
+    #Alpca mainly for flags, but just in case we need to add missing ones
+    al_assets = alpaca.get_all_assets()
+
+    for al_asset in al_assets:
+        try:
+            if al_asset.status == 'active' and al_asset.tradable:
+                if al_asset.symbol not in symbols:
+                    print(f"Alpaca New asset: {al_asset.symbol} {al_asset.name}")
+                    conn.execute("""INSERT INTO asset (exchange, symbol, name, source, easy_to_borrow, marginable, shortable) VALUES (%s, %s, %s, %s, %s, %s, %s)""", 
+                    (al_asset.exchange, al_asset.symbol, al_asset.name, 'alpaca', al_asset.easy_to_borrow, al_asset.marginable, al_asset.shortable))
+                else:
+                    conn.execute("""UPDATE asset SET easy_to_borrow = %s, marginable = %s, shortable = %s where symbol = %s""", 
+                    (al_asset.easy_to_borrow, al_asset.marginable, al_asset.shortable, al_asset.symbol))
+        except Exception as e:
+            print(al_asset.symbol)
             print(e)

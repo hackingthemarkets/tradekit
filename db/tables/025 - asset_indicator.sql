@@ -6,7 +6,7 @@ BEGIN
     END IF;
 END$$;
 
-CREATE TABLE IF NOT EXISTS asset_indicators 
+CREATE TABLE IF NOT EXISTS asset_indicator 
 (
   id SERIAL PRIMARY KEY,
   asset_price_id INTEGER NOT NULL,

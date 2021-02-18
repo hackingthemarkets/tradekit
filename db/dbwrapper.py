@@ -7,7 +7,7 @@ dbConfig = {}
 dbEngine = {}
 
 def initDbConfig():
-    with open('server.json') as json_file:
+    with open('/app/db/server.json') as json_file:
         serverConfig = json.load(json_file)
 
     global dbConfig
@@ -21,6 +21,8 @@ def initDbConfig():
 
 def initDb():
     global dbEngine
+    
+    initDbConfig()
 
     connect_url = engine.url.URL(
         'postgresql+psycopg2', 
@@ -31,6 +33,7 @@ def initDb():
         database=dbConfig['database']
     )
     dbEngine = create_engine(connect_url)
+    dbEngine = dbEngine.execution_options(isolation_level="AUTOCOMMIT")
 
     with dbEngine.connect() as conn:
         result = conn.execute('SELECT version()')

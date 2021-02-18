@@ -1,23 +1,18 @@
-import sqlite3
-from config import * 
+import sys
+sys.path.append('/app')
+import dbwrapper as dbw
 
-connection = sqlite3.connect(DB_PATH)
-cursor = connection.cursor()
 
-cursor.execute("""
-    DROP TABLE asset_price
-""")
+dbw.initDb()
 
-cursor.execute("""
-    DROP TABLE asset
-""")
-
-cursor.execute("""
-    DROP TABLE strategy
-""")
-
-cursor.execute("""
-    DROP TABLE asset_strategy
-""")
-
-connection.commit()
+with dbw.dbEngine.connect() as conn:
+    
+    result = conn.execute("""
+            DO $$ DECLARE
+                r RECORD;
+            BEGIN
+                FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
+                    EXECUTE 'DROP TABLE IF EXISTS ' || quote_ident(r.tablename) || ' CASCADE';
+                END LOOP;
+            END $$;
+        """)

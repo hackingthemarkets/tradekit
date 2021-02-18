@@ -3,10 +3,9 @@ import json
 import dbwrapper as dbw
 
 def initSchema():
-    basepath = 'tables'
+    basepath = '/app/db/tables'
     entries = os.listdir(basepath)
-    print('Initializing Schema')
-    
+
     with os.scandir(basepath) as entries:
         for entry in entries:
             if entry.is_file():
@@ -14,12 +13,10 @@ def initSchema():
                 # TODO: Can put this in a function and just yield entries intsead
                 with open(entry, 'r') as sqlFile:
                     query = sqlFile.read()
+                    #with dbw.dbEngine.connect().execution_options(autocommit=True) as conn:
                     with dbw.dbEngine.connect() as conn:
                         result = conn.execute(query)
-    
-    print('Done initializing!')
 
-dbw.initDbConfig()
 dbw.initDb()
 initSchema()
 
