@@ -28,12 +28,12 @@ with dbw.dbEngine.connect() as conn:
     from_date = datetime.now() - timedelta(days=DAYS_BACK)
 
     #get the max data we have in the db to adjust from if need be
-    result = conn.execute("""select Max(dt) as dt from asset_price""")
+    max_dates = conn.execute("""select Max(dt) as dt from asset_price""")
 
-    for row in results:
-        if row[dt] is not None:
+    for row in max_dates:
+        if row[0] is not None:
             #start from the next day
-            from_date = row[dt] + timedelta(days=1)
+            from_date = row[0] + timedelta(days=1)
 
 
     for symbol in symbols:
