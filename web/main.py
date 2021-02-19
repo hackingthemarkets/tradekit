@@ -3,8 +3,8 @@ sys.path.append('/app')
 import dbwrapper as dbw
 import data.polygon as d_poly
 import data.alpaca as d_alpaca
-import dbwrapper as dbw
-
+import db.dbwrapper as dbw
+import screening.new_records as nr
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -23,71 +23,26 @@ def index(request:Request):
     
     asset_filter = request.query_params.get('filter', False)
 
-    with dbw.dbEngine.connect() as conn:
-        #get the max data we have in the db to adjust from if need be
-        max_dates = conn.execute("""SELECT max(date) as max_date from asset_price""")
-    db_latest_price_date_available = max_dates.row[0]
+    latest_price_date = get_latest_price_date()
 
-    # if asset_filter =='new_close_high':
-    #      cursor.execute("""
-    #         SELECT * FROM (
-    #             select exchange, symbol, name, asset_id, max(close), date
-    #             from asset_price join asset on asset.id = asset_price.asset_id
-    #             group by asset_id
-    #             ) where date = ? order by exchange, symbol
-    #     """, (latest_price_date,))
-    
-    # elif asset_filter =='new_intra_high':
-    #      cursor.execute("""
-    #         SELECT * FROM (
-    #             select exchange, symbol, name, asset_id, max(high), date
-    #             from asset_price join asset on asset.id = asset_price.asset_id
-    #             group by asset_id
-    #             ) where date = ? order by exchange, symbol
-    #     """, (latest_price_date,))
-    
-    # elif asset_filter =='new_vol_high':
-    #     cursor.execute("""
-    #     SELECT * FROM (
-    #         select exchange, symbol, name, asset_id, max(volume), date
-    #         from asset_price join asset on asset.id = asset_price.asset_id
-    #         group by asset_id
-    #         ) where date = ? order by exchange, symbol
-    # """, (latest_price_date,))
-    
-    # elif asset_filter =='new_intra_low':
-    #     cursor.execute("""
-    #     SELECT * FROM (
-    #         select exchange, symbol, name, asset_id, min(low), date
-    #         from asset_price join asset on asset.id = asset_price.asset_id
-    #         group by asset_id
-    #         ) where date = ? order by exchange, symbol
-    # """, (latest_price_date,))
-    
-    # elif asset_filter =='new_close_low':
-    #     cursor.execute("""
-    #     SELECT * FROM (
-    #         select exchange, symbol, name, asset_id, min(close), date
-    #         from asset_price join asset on asset.id = asset_price.asset_id
-    #         group by asset_id
-    #         ) where date = ? order by exchange, symbol
-    # """, (latest_price_date,))
-    
-    # elif asset_filter =='new_vol_low':
-    #     cursor.execute("""
-    #     SELECT * FROM (
-    #         select exchange, symbol, name, asset_id, min(volume), date
-    #         from asset_price join asset on asset.id = asset_price.asset_id
-    #         group by asset_id
-    #         ) where date = ? order by exchange, symbol
-    # """, (latest_price_date,))
-
-    # else:
-        cursor.execute("""
-            SELECT * FROM asset ORDER BY exchange, symbol
-        """)
+    if asset_filter =='new_close_high':
+        assets = nr.get_symbols_close_highest_on_date(latest_price_date)
+    elif asset_filter =='new_intra_high':
+        assets = nr.get_symbols_intra_highest_on_date(latest_price_date)
+    elif asset_filter =='new_vol_high':
+        assets = nr.get_symbols_intra_highest_on_date(latest_price_date)
+    elif asset_filter =='new_intra_low':
+        assets = nr.get_symbols_intra_highest_on_date(latest_price_date)
+    elif asset_filter =='new_close_low':
+        assets = nr.get_symbols_close_lowest_on_date(latest_price_date)
+    elif asset_filter =='new_vol_low':
+        assets = nr.get_symbols_volume_lowest_on_date(latest_price_date)
+    else:
+        assets = get_all_active_symbols()
     
     rows = cursor.fetchall()
+    
+    indicator_values = {}
     
     # cursor.execute ("""
     #     SELECT symbol, rsi_14, sma_20, sma_50, close
@@ -96,11 +51,11 @@ def index(request:Request):
     # """, (latest_price_date,))
 
     # indicator_rows = cursor.fetchall()
-    # indicator_values = {}
+
     # for row in indicator_rows:
     #     indicator_values[row['symbol']] = row
 
-    return templates.TemplateResponse("index.html", {"request": request, "assets": rows, "indicators":indicator_values})
+    return templates.TemplateResponse("index.html", {"request": request, "assets": assets, "indicators":indicator_values})
 
 @app.get("/asset/{symbol}")
 def asset_details(request:Request, symbol):
