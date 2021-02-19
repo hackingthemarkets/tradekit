@@ -14,10 +14,10 @@ def initDbConfig():
 
     dbConfig = serverConfig['db']['development']['connection']
 
-    print('Host: ' + dbConfig['host'])
-    print('Port: ' + str(dbConfig['port']))
-    print('Database: ' + dbConfig['database'])
-    print('User: ' + dbConfig['user'])
+    # print('Host: ' + dbConfig['host'])
+    # print('Port: ' + str(dbConfig['port']))
+    # print('Database: ' + dbConfig['database'])
+    # print('User: ' + dbConfig['user'])
 
 def initDb():
     global dbEngine

@@ -7,7 +7,7 @@ import data.alpaca as d_alpaca
 import screening.new_records as nr
 import models.asset as asset
 import models.asset_price as asset_price
-import models.strategy as strategy
+import models.strategy as strat
 
 from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -27,7 +27,7 @@ def index(request:Request):
     
     asset_filter = request.query_params.get('filter', False)
 
-    latest_price_date = get_latest_price_date()
+    latest_price_date = asset_price.get_latest_price_date()
 
     if asset_filter =='new_close_high':
         assets = nr.get_symbols_close_highest_on_date(latest_price_date)
@@ -42,9 +42,7 @@ def index(request:Request):
     elif asset_filter =='new_vol_low':
         assets = nr.get_symbols_volume_lowest_on_date(latest_price_date)
     else:
-        assets = get_all_active_symbols()
-    
-    rows = cursor.fetchall()
+        assets = asset.get_all_active_symbols()
     
     indicator_values = {}
 
@@ -66,9 +64,9 @@ def asset_details(request:Request, symbol):
 
     assets = asset.get_all_symbol_data(symbol)
     
-    asset_prices = asset_price.get_all_prices_for_symbol(symbol)
+    asset_prices = asset_price.get_all_prices_for_symbol(symbol,'day')
 
-    strategies =  get_all_strategies()
+    strategies = strat.get_all_strategies()
 
     return templates.TemplateResponse("asset.html", {"request": request, "asset": assets, "prices":asset_prices, "strategies":strategies})
 
