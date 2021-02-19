@@ -9,10 +9,10 @@ import models.asset as asset
 import models.asset_price as asset_price
 import models.strategy as strategy
 
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi import FastAPI, Request, Form
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
 
