@@ -1,37 +1,112 @@
 {% extends "layout.html" %}
+{% block title %}
+    Main
+{% endblock %} 
+
+{% block head %}
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.23/css/jquery.dataTables.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.23/js/jquery.dataTables.min.js"></script>
+
+<script type = "text/javascript">
+    $(document).ready( function () {
+        $('#assetlist').DataTable( {
+        "pageLength": 100
+    } );
+    } );
+</script>
+
+</script>
+
+
+{% endblock %}
 
 {% block content %}
+    <h1><a href="/patterns/">Go To Pattern Scanner</a></h1>
 
-<h1>Examples</h1>
+    <h1>Asset List</h1>
 
-<div>
-    <ul>
-        <li>
-            <a href="/demovideo">Demo Video</a>
-        </li>
-        <li>
-            <a href="/tradingview_widget">TradingView Real-Time Chart Widget</a>
-        </li>
-        <li>
-            <a href="/sqlalchemy">SQLAlchemy ORM</a>
-        </li>
-        <li>
-            <a href="/timescaledb">TimeScale DB time-series queries</a>
-        </li>
-        <li>
-            <a href="/alpaca">Alpaca Stock Order</a>
-        </li>
-        <li>
-            <a href="/tradier">Tradier Option Order</a>
-        </li>
-        <li>
-            <a href="/binance">Binance Dogecoin Order</a>
-        </li>
-        <li>
-            <a href="/backtrader">Backtrader Backtest</a>
-        </li>
-    </ul>
-</div>
+    <form method = "get">
+        <select name = "filter">
+            <option value = "">All Assets</option>
+            <option 
+            {% if request.query_params.filter == 'new_intra_high' %} selected ="selected" {% endif %}}
+            value = "new_intra_high">New Intraday Highs</option>
+            <option 
+            {% if request.query_params.filter == 'new_close_high' %} selected ="selected" {% endif %}}
+            value = "new_close_high">New Closing Highs</option>
+            <option 
+            {% if request.query_params.filter == 'new_vol_high' %} selected ="selected" {% endif %}}
+            value = "new_vol_high">New Volume Highs</option>
+            <option 
+            {% if request.query_params.filter == 'new_intra_low' %} selected ="selected" {% endif %}}
+            value = "new_intra_low">New Intraday Lows</option>
+            <option 
+            {% if request.query_params.filter == 'new_close_low' %} selected ="selected" {% endif %}}
+            value = "new_close_low">New Closing Lows</option>
+            <option 
+            {% if request.query_params.filter == 'new_vol_low' %} selected ="selected" {% endif %}}
+            value = "new_vol_low">New Volume Lows</option>
+        </select>
+        <input type = "submit" value="Filter" />
+    </form>
+    
+    <table id="assetlist" class="ui striped table" style="width:100%">
+        <thead>
+            <tr>
+                <th>Exchange</th>
+                <th>Symbol</th>
+                <th>Name</th>
+                <th>Price</th>
+                <!-- <th>RSI 14</th>
+                <th>SMA 20</th>
+                <th>SMA 50</th> -->
+            </tr>
+        </thead>
+        <tbody>
+            {% for asset in assets %}
+            <tr>
+                <td>
+                    {{asset.exchange}}
+                </td>
+                <td> <a href="/asset/{{asset.symbol}}"> {{asset.symbol}} </a>
+                    
+                </td>
+                <td>
+                    <a href="/asset/{{asset.symbol}}">{{asset.name}}</a>
+                </td>
+                <!-- {% if indicators[asset.symbol] is defined %}
+
+                    <td>{{indicators[asset.symbol].close}}</td>
+                    
+                    {% if indicators[asset.symbol].rsi_14 is number %}
+                        <td>{{indicators[asset.symbol].rsi_14|round(2)}}</td>
+                    {% else %}
+                        <td>N/A</td>
+                    {% endif %}
+                    
+                    {% if indicators[asset.symbol].sma_20 is number %}
+                        <td>{{indicators[asset.symbol].sma_20|round(2)}}</td>
+                    {% else %}
+                        <td>N/A</td>
+                    {% endif %}
+                    
+                    {% if indicators[asset.symbol].sma_50 is number %}
+                        <td>{{indicators[asset.symbol].sma_50|round(2)}}</td>
+                    {% else %}
+                        <td>N/A</td>
+                    {% endif %}
+                
+                {% endif %}
+         -->
+               
+
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+
 
 
 {% endblock %}

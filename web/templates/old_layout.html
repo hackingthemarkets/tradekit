@@ -1,0 +1,82 @@
+<html>
+<head>
+    <title>TradeKit</title>
+    <style>
+        #logo { font-size: 32px; margin: 30px 0 30px 0; }
+        #logo-icon { font-size: 40px; }
+        #product-name { font-size: 40px; margin-top: 10px; }
+        #product-name a { color: black; }
+        #tagline { font-size: 16px; margin-top: 20px; }
+        body { font-family: 'Roboto', sans-serif; }
+        #content { margin-top: 30px; }
+        li { font-size: 16px; line-height: 24px; }
+    </style>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;1,100&display=swap" rel="stylesheet">
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.js"></script>
+</head>
+
+<body>
+    <div class="ui container vertical center aligned">
+        <div id="logo">
+            <i id="logo-icon" class="chart bar icon"></i>
+
+            <div id="product-name">
+                <a href="/">TradeKit</a>
+            </div>
+            
+            <div id="tagline">Starter Kit for Stock and Crypto Trading Apps</div>
+        </div>
+    </div>
+
+    <div id="content" class="ui container segment">
+        {% block content %}{% endblock %}
+    </div>
+
+    <div id="footer" class="ui container segment">
+            <h1>Created By</h1>
+            <div class="ui vertical stripe segment">
+                    <div class="ui middle aligned stackable grid container">
+                      <div class="row">
+            
+            <div class="ui list">
+                <div class="item">
+                    <i class="github icon"></i>
+                    <div class="content">
+                        <a href="https://github.com/hackingthemarkets/tradekit">TradeKit</a>
+                    </div>
+                </div>
+                <div class="item">
+                    <i class="twitter icon"></i>
+                    <div class="content">
+                        <a href="https://twitter.com/PartTimeLarry">@PartTimeLarry</a>
+                    </div>
+                </div>
+                <div class="item">
+                    <i class="youtube icon"></i>
+                    <div class="content">
+                        <a href="https://youtube.com/c/parttimelarry">PartTimeLarry</a>
+                    </div>
+                </div>
+                <div class="item">
+                    <i class="mail icon"></i>
+                    <div class="content">
+                    <a href="mailto:parttimelarry@gmail.com">parttimelarry@gmail.com</a>
+                    </div>
+                </div>
+                <div class="item">
+                    <i class="linkify icon"></i>
+                    <div class="content">
+                    <a href="https:/hackingthemarkets.com">hackingthemarkets.com</a>
+                    </div>
+                </div>
+            </div>
+    </div>
+
+
+    </div>
+
+    </div></div></div>
+</body>
+</html>

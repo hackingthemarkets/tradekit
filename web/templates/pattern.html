@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Patterns
+{% endblock %}
+
+{% block content %}
+    <h1><a href ="/">Assets</a>
+        <i class = "angle double right icon"></i>
+        Pattern Scanner (Top 500 Highest Volume Assets)
+    </h1>     
+    <form method = "get">
+        <select name = "scan">
+            {% for pattern in patterns %}
+                <option value= "{{pattern}}" {% if pattern == selected_pattern %} selected = "selected" {% endif %}>{{patterns[pattern]}}</option>
+            {% endfor %}
+        </select>
+        <input type = "submit" value = "Scan" />
+    </form>
+
+    <table class="ui striped table">
+        <thead>
+            <tr>
+                <th>Symbol</th>
+                <th>Name</th>
+                <th>Signal</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for asset in assets %}
+
+            {% if assets[asset][selected_pattern] %}
+                <tr>
+                    <td>
+                        {{asset}}
+                    </td>
+                    <td>
+                        {{assets[asset]['name']}}
+                    </td>
+                        <td class ="{{assets[asset][selected_pattern]}}">{{assets[asset][selected_pattern]}}
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan = "3">
+                        <img src="https://finviz.com/chart.ashx?t={{asset}}&ty=c&ta=1&p=d&s=l" />
+                    </td>
+                </tr>
+            {% endif %}
+        {% endfor %}
+        </tbody>
+    </table>
+
+
+{% endblock %}
