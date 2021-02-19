@@ -1,10 +1,14 @@
 import sys
 sys.path.append('/app')
-import dbwrapper as dbw
+
+import db.dbwrapper as dbw
 import data.polygon as d_poly
 import data.alpaca as d_alpaca
-import db.dbwrapper as dbw
 import screening.new_records as nr
+import models.asset as asset
+import models.asset_price as asset_price
+import models.strategy as strategy
+
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -43,7 +47,7 @@ def index(request:Request):
     rows = cursor.fetchall()
     
     indicator_values = {}
-    
+
     # cursor.execute ("""
     #     SELECT symbol, rsi_14, sma_20, sma_50, close
     #     from asset join asset_price on asset_price.asset_id = asset.id
@@ -59,59 +63,28 @@ def index(request:Request):
 
 @app.get("/asset/{symbol}")
 def asset_details(request:Request, symbol):
-    connection = sqlite3.connect(DB_PATH)
-    connection.row_factory = sqlite3.Row
-    cursor = connection.cursor()
 
-    cursor.execute("""
-        SELECT * FROM asset WHERE symbol = ?
-    """, (symbol,))
-    row = cursor.fetchone()
+    assets = asset.get_all_symbol_data(symbol)
     
-    cursor.execute(""" SELECT * FROM asset_price where asset_id = ? ORDER BY date DESC
-    """, (row['id'],)
+    asset_prices = asset_price.get_all_prices_for_symbol(symbol)
 
-    )
-    prices = cursor.fetchall()
+    strategies =  get_all_strategies()
 
-    cursor.execute("""
-        SELECT * FROM strategy
-    """)
-    strategies = cursor.fetchall()
-
-    return templates.TemplateResponse("asset.html", {"request": request, "asset": row, "prices":prices, "strategies":strategies})
+    return templates.TemplateResponse("asset.html", {"request": request, "asset": assets, "prices":asset_prices, "strategies":strategies})
 
 @app.post("/apply_strategy")
 def apply_strategy(strategy_id:int = Form(...), asset_id:int = Form(...)):
-    connection = sqlite3.connect(DB_PATH)
-    cursor = connection.cursor()
 
-    cursor.execute("""
-        INSERT INTO asset_strategy(asset_id, strategy_id) VALUES (?,?)
-    """, (asset_id, strategy_id))
-    connection.commit()
+    strategy.register_strategy_for_asset_id(asset_id, strategy_id)
 
     return RedirectResponse(url=f"/strategy/{strategy_id}", status_code=303)
 
 @app.get("/strategy/{strategy_id}")
 def strategy(request: Request, strategy_id):
-    connection = sqlite3.connect(DB_PATH)
-    connection.row_factory = sqlite3.Row
-    cursor = connection.cursor()
 
-    cursor.execute("""
-        SELECT id, name FROM strategy where id = ?
-    """, (strategy_id,))
+    strategy = strategy.get_strategy_by_id()
 
-    strategy = cursor.fetchone()
-
-    cursor.execute("""
-        SELECT exchange,symbol,name
-        FROM asset JOIN asset_strategy on asset_strategy.asset_id = asset.id
-        WHERE strategy_id = ?
-    """,(strategy_id,))
-
-    assets = cursor.fetchall()
+    assets = strategy.get_all_assets_by_strategy_id(strategy_id)
 
     return templates.TemplateResponse("strategy.html", {"request": request, "assets": assets, "strategy":strategy})
 

@@ -15,3 +15,16 @@ def get_all_active_symbols():
                                     active = TRUE
                                 """)
         return results.fetchall()
+
+def get_all_symbol_data(symbol: str):
+    with dbw.dbEngine.connect() as conn:
+
+        results = conn.execute("""
+                                SELECT
+                                    *
+                                FROM
+                                    asset
+                                WHERE
+                                    symbol = %s
+                                """, symbol)
+        return results.fetchone()
