@@ -32,7 +32,7 @@ def initDb():
         port=dbConfig['port'],
         database=dbConfig['database']
     )
-    dbEngine = create_engine(connect_url)
+    dbEngine = create_engine(connect_url, pool_size=20, max_overflow=0)
     dbEngine = dbEngine.execution_options(isolation_level="AUTOCOMMIT")
 
     with dbEngine.connect() as conn:

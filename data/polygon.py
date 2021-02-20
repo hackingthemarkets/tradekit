@@ -27,8 +27,9 @@ def get_agg_bars(symbol, period, multiplier, start, end):
             data = r.json()
             return data['results']
         return None
-    except:
+    except Exception as e:
         print('****** getting bars errored for symbol: ' + str(symbol))
+        print(e, data)
         return None
 
 def get_all_tickers():

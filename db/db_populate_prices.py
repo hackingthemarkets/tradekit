@@ -3,85 +3,158 @@
 import sys
 sys.path.append('/app')
 from datetime import datetime, date, timedelta
+
+from queue import Queue, Empty
+from concurrent.futures import ThreadPoolExecutor
+
 import data.polygon as d_poly
 import data.alpaca as d_alpaca
 import dbwrapper as dbw
 
-DAYS_BACK = 365
+MAX_WORKERS = 20
+
+DAYS_BACK = 3
 PERIOD = 'day'
 MULTIPLIER = 1
 
-USE_POLYGON = False
+# Can be polygon or alpaca
+DATA_SOURCE = 'alpaca'
+# Chunk size only applies to alpaca
+CHUNK_SIZE = 200
 
-def polygon_populate_prices():
-    with dbw.dbEngine.connect() as conn:
+symbolsToFetch = Queue()
 
-        symbols, asset_dict = get_symbols_dictionary()
-        to_date, from_date = get_to_from_dates()
+def writeAssetPrice(conn, symbol, source, priceData):
+    conn.execute("""INSERT INTO asset_price (asset_id, source, dt, timespan, open, high, low, close, volume) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) """,
+    symbol['asset_id'], source, priceData['t'], PERIOD, priceData['o'], priceData['h'], priceData['l'], priceData['c'], priceData['v'])
 
-        for symbol in symbols:
-            bars = d_poly.get_agg_bars(symbol, PERIOD, MULTIPLIER, from_date, to_date)
-            if bars is not None:
-                asset_id = asset_dict[symbol]
-                for bar in bars:
-                    conn.execute("""INSERT INTO asset_price (asset_id, source, dt, timespan, open, high, low, close, volume) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) """,
-                    asset_id, 'polygon', d_poly.ts_to_datetime(bar['t']), PERIOD, bar['o'], bar['h'], bar['l'], bar['c'], bar['v'])
+def fetchSymbolBars(symbol, source, from_date, to_date):
+    priceDataSet = []
 
-def alpaca_populate_prices():
-    with dbw.dbEngine.connect() as conn:
+    if source == 'polygon':
+        bars = d_poly.get_agg_bars(symbol['symbol'], PERIOD, MULTIPLIER, from_date, to_date)
+        if bars is not None:
+            # print('Got barsets for symbol {} {}'.format(symbol, bars))
+            for bar in bars:
+                pData = bar.copy()
+                pData['t'] = d_poly.ts_to_datetime(bar['t'])
+                priceDataSet.append(pData)
+        else:
+            print('No bars found for {}'.format(symbol['symbol']))
 
-        symbols, asset_dict = get_symbols_dictionary()
-        to_date, from_date = get_to_from_dates()
-        
+    elif source == 'alpaca':
+        # symbol is a chunk
+        symbols = list(map(getSymbolName, symbol))
         api = d_alpaca.get_api_pointer()
-
-        chunk_size = 200
-        for i in range(0, len(symbols), chunk_size):
-            symbol_chunk = symbols[i:i+chunk_size]
+        bars = d_alpaca.get_barset(api, symbols, PERIOD, from_date)
+        if bars is not None:
+            # print('Got barsets for symbol {} {}'.format(symbols, bars))
+            for bar in bars:
+                pData = bar.copy()
+                priceData['t'] = bar.t.date()
+                priceDataSet.append(pData)
+        else:
+            print('No bars found for {}'.format(symbols))
             
-            print('Getting barsets for chunk {}', i)
-            barsets = d_alpaca.get_barset(api,symbol_chunk, PERIOD, from_date)
+    else:
+        print('Error: Data source ({}) is not valid'.format(source))
+        return
+    
+    with dbw.dbEngine.connect() as conn:
+        for priceData in priceDataSet:
+            writeAssetPrice(conn, symbol, source, priceData)
 
-            for symbol in barsets:
-                print('Getting barsets for symbol {}', symbol)
-                for bar in barsets[symbol]:
-                    asset_id = asset_dict[symbol]
-                    print('Inserting prices for {} {} {}'.format(asset_id, symbol, bar.t.date()))
-                    conn.execute("""INSERT INTO asset_price (asset_id, source, dt, timespan, open, high, low, close, volume) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) """,
-                    asset_id, 'alpaca', bar.t.date(), PERIOD, bar.o, bar.h, bar.l, bar.c, bar.v)
+def fetchSymbol(symbol):
+
+    if DATA_SOURCE == 'polygon':
+        from_date = symbol['from_date']
+        to_date = symbol['to_date']
+    elif DATA_SOURCE == 'alpaca': 
+        from_date = datetime.now() - timedelta(days=DAYS_BACK)
+        to_date = datetime.now()
+    else:
+        print('Error: Data source ({}) is not valid'.format(DATA_SOURCE))
+        return
+
+    try:
+        fetchSymbolBars(symbol, DATA_SOURCE, from_date, to_date)
+    except Exception as e:
+        print(e)
+
+def symbolFeeder(threadPool):
+    while symbolsToFetch.qsize() > 0:
+        try:
+            symbol = symbolsToFetch.get()
+            threadPool.submit(fetchSymbol, symbol)
+        except Empty:
+            return
+        except Exception as e:
+            print('Exception with {}'.format(symbol))
+            print(e)
+            continue
+
+def buildSymbolQueue():
+    pool = ThreadPoolExecutor(max_workers=MAX_WORKERS)
+
+    symbols = get_symbols_dictionary()
+
+    if DATA_SOURCE == 'polygon':
+        for s in symbols:
+            symbolsToFetch.put(s)
+    elif DATA_SOURCE == 'alpaca': 
+        symbolChunks = list(chunks(symbols, CHUNK_SIZE))
+        for sc in symbolChunks:
+            symbolsToFetch.put(sc)
+    else:
+        print('Error: Data source ({}) is not valid'.format(DATA_SOURCE))
+        return
+
+    symbolFeeder(threadPool=pool)
+    pool.shutdown(wait=True)
+
+def getSymbolName(s):
+    return s['symbol']
+
+def chunks(lst, n):
+    """Yield successive n-sized chunks from lst."""
+    for i in range(0, len(lst), n):
+        yield lst[i:i + n]
 
 def get_symbols_dictionary():
+    to_date = datetime.now()
+    from_date = datetime.now() - timedelta(days=DAYS_BACK)
+
     with dbw.dbEngine.connect() as conn:
         #getting and prepping symbols to get bars for
-        results = conn.execute("""SELECT symbol, id FROM asset""")
+        results = conn.execute("""
+            SELECT 
+                symbol, 
+                id,
+                (SELECT MAX(dt) as dt from asset_price WHERE asset_price.asset_id = asset.id) as max_dt
+            FROM asset 
+            order by symbol
+        """)
 
         symbols = []
-        asset_dict = {}
         
         for row in results:
-            symbol = row['symbol']
-            symbols.append(symbol)
-            asset_dict[symbol] = row['id']
-    return symbols, asset_dict
+            symbol = {
+                "symbol": row['symbol'], 
+                "asset_id": row['id'], 
+                "from_date": from_date, 
+                "to_date": to_date
+            }
 
-#TODO: It might be better trying to get max dates per symbol, especially for polygon that uses a per symbol endpoint
-def get_to_from_dates():
-    with dbw.dbEngine.connect() as conn:
-        #specify default to and from
-        to_date = datetime.now()
-        from_date = datetime.now() - timedelta(days=DAYS_BACK)
-
-        #get the max data we have in the db to adjust from if need be
-        max_dates = conn.execute("""select Max(dt) as dt from asset_price""")
-
-        for row in max_dates:
-            if row[0] is not None:
+            if row['max_dt'] is not None:
                 #start from the next day
-                from_date = row[0] + timedelta(days=1)
-    return to_date, from_date
+                symbol['from_date'] = row['max_dt'] + timedelta(days=1)
+            
+            symbols.append(symbol)
+    return symbols
 
 dbw.initDb()
-if USE_POLYGON:
-    polygon_populate_prices()
-else: 
-    alpaca_populate_prices()
+buildSymbolQueue()
+# if USE_POLYGON:
+#     polygon_populate_prices()
+# else: 
+#     alpaca_populate_prices()
