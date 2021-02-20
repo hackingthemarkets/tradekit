@@ -27,7 +27,7 @@ templates = Jinja2Templates(directory="/app/web/templates")
 dbw.initDb()
 
 @app.get("/")
-def index(request:Request):
+async def index(request:Request):
     
     asset_filter = request.query_params.get('filter', False)
 
@@ -64,7 +64,7 @@ def index(request:Request):
     return templates.TemplateResponse("index.html", {"request": request, "assets": assets, "indicators":indicator_values})
 
 @app.get("/asset/{symbol}")
-def asset_details(request:Request, symbol):
+async def asset_details(request:Request, symbol):
 
     assets = asset.get_all_symbol_data(symbol)
     
@@ -122,18 +122,3 @@ def pattern(request:Request):
                     except:
                         pass
     return templates.TemplateResponse("pattern.html", {"request": request, "patterns":patterns, "assets":asset_dict, "selected_pattern":selected_pattern})
-
-
-
-
-
-
-
-
-# @app.get("/", response_class=HTMLResponse)
-# async def index(request: Request):
-#     return templates.TemplateResponse("index.html", {"request": request})
-
-# @app.get("/tradingview_widget")
-# async def tradingview_widget(request: Request):
-#     return templates.TemplateResponse("tradingview_widget.html", {"request": request})
