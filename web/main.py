@@ -1,9 +1,13 @@
 import sys
 sys.path.append('/app')
-
 import db.dbwrapper as dbw
-import data.polygon as d_poly
-import data.alpaca as d_alpaca
+
+#remove after refactoring patterns
+import talib
+import pandas as pd
+from screening.talib_candelstick_patterns import patterns
+#remove after refactoring patterns
+
 import screening.new_records as nr
 import models.asset as asset
 import models.asset_price as asset_price
@@ -91,42 +95,32 @@ def pattern(request:Request):
     selected_pattern = request.query_params.get('scan',False)
     asset_dict = {}
     if selected_pattern != False:
-        
-        connection = sqlite3.connect(DB_PATH)
-        connection.row_factory = sqlite3.Row
-        cursor = connection.cursor()
-
-        cursor.execute("""
-            SELECT symbol, name, exchange, max_volume, 'bla2' as pattern  FROM asset 
-            join 
-            (select asset_id, max(volume) as max_volume from asset_price group by asset_id) as t on t.asset_id = asset.id
-            order by max_volume DESC LIMIT 500
-        """)
-        assets = cursor.fetchall()
+        assets = asset_price.get_top_500_volume_assets()
         
         for asset in assets:
             asset_dict[asset['symbol']] = {'name':asset['name']}
 
         #print(asset_dict)
         for asset in asset_dict:
-            df = pd.read_sql("""
-            SELECT * from asset_price
-            JOIN asset on asset.id = asset_price.asset_id
-            where asset.symbol = ?
-            """, connection, params = [asset])
-            pattern_function = getattr(talib, selected_pattern)
-            if len(df) > 0:
-                try:
-                    result = pattern_function(df['open'], df['high'], df['low'], df['close'])
-                    last = result.tail(1).values[0]
-                    if last > 0:
-                        asset_dict[asset][selected_pattern]='bullish'
-                    elif last < 0:
-                        asset_dict[asset][selected_pattern]='bearish'
-                    else:
-                        asset[pattern]=None
-                except:
-                    pass
+            with dbw.dbEngine.connect() as conn:
+                df = pd.read_sql("""
+                SELECT * from asset_price
+                JOIN asset on asset.id = asset_price.asset_id
+                where asset.symbol = %s
+                """, conn, params = [asset])
+                pattern_function = getattr(talib, selected_pattern)
+                if len(df) > 0:
+                    try:
+                        result = pattern_function(df['open'], df['high'], df['low'], df['close'])
+                        last = result.tail(1).values[0]
+                        if last > 0:
+                            asset_dict[asset][selected_pattern]='bullish'
+                        elif last < 0:
+                            asset_dict[asset][selected_pattern]='bearish'
+                        else:
+                            asset[pattern]=None
+                    except:
+                        pass
     return templates.TemplateResponse("pattern.html", {"request": request, "patterns":patterns, "assets":asset_dict, "selected_pattern":selected_pattern})
 
 
