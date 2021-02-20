@@ -2,13 +2,8 @@ import sys
 sys.path.append('/app')
 import db.dbwrapper as dbw
 
-#remove after refactoring patterns
-import talib
-import pandas as pd
-from screening.talib_candelstick_patterns import patterns
-#remove after refactoring patterns
-
 import screening.new_records as nr
+import technical_analysis.talib as ta
 import models.asset as asset
 import models.asset_price as asset_price
 import models.strategy as strat
@@ -94,31 +89,18 @@ def strategy(request: Request, strategy_id):
 def pattern(request:Request):
     selected_pattern = request.query_params.get('scan',False)
     asset_dict = {}
+
     if selected_pattern != False:
         assets = asset_price.get_top_500_volume_assets()
         
         for asset in assets:
             asset_dict[asset['symbol']] = {'name':asset['name']}
 
-        #print(asset_dict)
         for asset in asset_dict:
-            with dbw.dbEngine.connect() as conn:
-                df = pd.read_sql("""
-                SELECT * from asset_price
-                JOIN asset on asset.id = asset_price.asset_id
-                where asset.symbol = %s
-                """, conn, params = [asset])
-                pattern_function = getattr(talib, selected_pattern)
-                if len(df) > 0:
-                    try:
-                        result = pattern_function(df['open'], df['high'], df['low'], df['close'])
-                        last = result.tail(1).values[0]
-                        if last > 0:
-                            asset_dict[asset][selected_pattern]='bullish'
-                        elif last < 0:
-                            asset_dict[asset][selected_pattern]='bearish'
-                        else:
-                            asset[pattern]=None
-                    except:
-                        pass
-    return templates.TemplateResponse("pattern.html", {"request": request, "patterns":patterns, "assets":asset_dict, "selected_pattern":selected_pattern})
+            result = ta.get_last_pattern_dir_for_symbol(asset, selected_pattern)
+            if result is not None:
+                asset_dict[asset][selected_pattern] = result
+            else:
+                asset_dict[asset][selected_pattern] = None
+
+    return templates.TemplateResponse("pattern.html", {"request": request, "patterns":ta.get_all_patterns(), "assets":asset_dict, "selected_pattern":selected_pattern})
