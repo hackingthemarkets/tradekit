@@ -1,3 +1,5 @@
+#!/usr/bin/env python 
+ 
 import sys
 sys.path.append('/app')
 from datetime import datetime, date, timedelta
@@ -37,11 +39,14 @@ def alpaca_populate_prices():
         for i in range(0, len(symbols), chunk_size):
             symbol_chunk = symbols[i:i+chunk_size]
             
+            print('Getting barsets for chunk {}', i)
             barsets = d_alpaca.get_barset(api,symbol_chunk, PERIOD, from_date)
 
             for symbol in barsets:
+                print('Getting barsets for symbol {}', symbol)
                 for bar in barsets[symbol]:
                     asset_id = asset_dict[symbol]
+                    print('Inserting prices for {} {} {}'.format(asset_id, symbol, bar.t.date()))
                     conn.execute("""INSERT INTO asset_price (asset_id, source, dt, timespan, open, high, low, close, volume) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) """,
                     asset_id, 'alpaca', bar.t.date(), PERIOD, bar.o, bar.h, bar.l, bar.c, bar.v)
 
