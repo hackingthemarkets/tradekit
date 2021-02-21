@@ -12,4 +12,4 @@ def get_api_pointer():
     return trade_api.REST(ALPACA_API_KEY, ALPACA_SECRET_KEY, base_url=ALPACA_END_POINT)
 
 def get_barset(api_pointer, symbols, period, from_date):
-    return api_pointer.get_barset(symbols, period, after=from_date.date().isoformat())
+    return api_pointer.get_barset(symbols, period, after=from_date)

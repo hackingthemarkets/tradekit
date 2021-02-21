@@ -2,7 +2,7 @@
  
 import sys
 sys.path.append('/app')
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, timezone
 
 from queue import Queue, Empty
 from concurrent.futures import ThreadPoolExecutor
@@ -10,10 +10,12 @@ from concurrent.futures import ThreadPoolExecutor
 import data.polygon as d_poly
 import data.alpaca as d_alpaca
 import dbwrapper as dbw
+from sqlalchemy import exc
+import pandas as pd
 
 MAX_WORKERS = 20
 
-DAYS_BACK = 3
+DAYS_BACK = 7
 PERIOD = 'day'
 MULTIPLIER = 1
 
@@ -25,8 +27,11 @@ CHUNK_SIZE = 200
 symbolsToFetch = Queue()
 
 def writeAssetPrice(conn, symbol, source, priceData):
-    conn.execute("""INSERT INTO asset_price (asset_id, source, dt, timespan, open, high, low, close, volume) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) """,
-    symbol['asset_id'], source, priceData['t'], PERIOD, priceData['o'], priceData['h'], priceData['l'], priceData['c'], priceData['v'])
+    try:
+        conn.execute("""INSERT INTO asset_price (asset_id, source, dt, timespan, open, high, low, close, volume) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) """,
+        priceData['asset_id'], source, priceData['t'], PERIOD, priceData['o'], priceData['h'], priceData['l'], priceData['c'], priceData['v'])
+    except exc.SQLAlchemyError as e:
+        print(e)
 
 def fetchSymbolBars(symbol, source, from_date, to_date):
     priceDataSet = []
@@ -38,6 +43,8 @@ def fetchSymbolBars(symbol, source, from_date, to_date):
             for bar in bars:
                 pData = bar.copy()
                 pData['t'] = d_poly.ts_to_datetime(bar['t'])
+                pData['symbol'] = symbol['symbol']
+                pData['asset_id'] = symbol['asset_id']
                 priceDataSet.append(pData)
         else:
             print('No bars found for {}'.format(symbol['symbol']))
@@ -46,13 +53,23 @@ def fetchSymbolBars(symbol, source, from_date, to_date):
         # symbol is a chunk
         symbols = list(map(getSymbolName, symbol))
         api = d_alpaca.get_api_pointer()
-        bars = d_alpaca.get_barset(api, symbols, PERIOD, from_date)
-        if bars is not None:
-            # print('Got barsets for symbol {} {}'.format(symbols, bars))
-            for bar in bars:
-                pData = bar.copy()
-                priceData['t'] = bar.t.date()
-                priceDataSet.append(pData)
+        
+        barsets = d_alpaca.get_barset(api, symbols, PERIOD, from_date.isoformat())
+        if barsets is not None:
+            for bs in barsets:
+                for bar in barsets[bs]:
+                    pData = {
+                        "t": bar.t.date(),
+                        "o": bar.o,
+                        "h": bar.h,
+                        "l": bar.l,
+                        "c": bar.c,
+                        "v": bar.v,
+                        "symbol": bs,
+                        "asset_id": asset_dict[bs]
+                    }
+
+                    priceDataSet.append(pData)
         else:
             print('No bars found for {}'.format(symbols))
             
@@ -70,15 +87,16 @@ def fetchSymbol(symbol):
         from_date = symbol['from_date']
         to_date = symbol['to_date']
     elif DATA_SOURCE == 'alpaca': 
-        from_date = datetime.now() - timedelta(days=DAYS_BACK)
-        to_date = datetime.now()
+        from_date = datetime.now(tz=timezone.utc) - timedelta(days=DAYS_BACK)
+        to_date = datetime.now(tz=timezone.utc)
     else:
         print('Error: Data source ({}) is not valid'.format(DATA_SOURCE))
         return
 
     try:
         fetchSymbolBars(symbol, DATA_SOURCE, from_date, to_date)
-    except Exception as e:
+    except:
+        e = sys.exc_info()[0]
         print(e)
 
 def symbolFeeder(threadPool):
@@ -88,8 +106,8 @@ def symbolFeeder(threadPool):
             threadPool.submit(fetchSymbol, symbol)
         except Empty:
             return
-        except Exception as e:
-            print('Exception with {}'.format(symbol))
+        except:
+            e = sys.exc_info()[0]
             print(e)
             continue
 
@@ -121,8 +139,12 @@ def chunks(lst, n):
         yield lst[i:i + n]
 
 def get_symbols_dictionary():
-    to_date = datetime.now()
-    from_date = datetime.now() - timedelta(days=DAYS_BACK)
+    to_date = datetime.now(tz=timezone.utc)
+    from_date = datetime.now(tz=timezone.utc) - timedelta(days=DAYS_BACK)
+
+    symbols = []
+    global asset_dict
+    asset_dict = {}
 
     with dbw.dbEngine.connect() as conn:
         #getting and prepping symbols to get bars for
@@ -134,8 +156,6 @@ def get_symbols_dictionary():
             FROM asset 
             order by symbol
         """)
-
-        symbols = []
         
         for row in results:
             symbol = {
@@ -149,12 +169,10 @@ def get_symbols_dictionary():
                 #start from the next day
                 symbol['from_date'] = row['max_dt'] + timedelta(days=1)
             
+            asset_dict[row['symbol']] = row['id']
             symbols.append(symbol)
+
     return symbols
 
 dbw.initDb()
 buildSymbolQueue()
-# if USE_POLYGON:
-#     polygon_populate_prices()
-# else: 
-#     alpaca_populate_prices()
