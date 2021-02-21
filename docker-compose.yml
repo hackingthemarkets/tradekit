@@ -8,18 +8,17 @@ services:
     ports:
       - 5432:5432
     environment:
-      - POSTGRES_USER=tradekit
-      - POSTGRES_PASSWORD=yourpassword
-      - POSTGRES_DB=tradekit
-    volumes:
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - POSTGRES_USER=lulosol
+      - POSTGRES_PASSWORD=lulosol
+      - POSTGRES_DB=lulosol
   web:
     build: .
     command: uvicorn web.main:app --host 0.0.0.0 --port 80 --reload
     volumes:
       - .:/app
     ports:
-      - "8000:80"
+      - 8000:80
+      - 5678:5678
     depends_on:
       - timescale
     

@@ -1,3 +1,6 @@
+#python stuff
+python-multipart
+
 # data analysis libraries
 numpy
 scipy
@@ -14,6 +17,7 @@ tulipy
 # database connection, ORM
 psycopg2
 sqlalchemy
+sqlalchemy-datatables
 
 # broker API libraries
 alpaca-trade-api
@@ -25,64 +29,65 @@ robin-stocks
 # data providers
 intrinio-sdk
 polygon-api-client
-iexfinance
+#iexfinance
 yfinance
-quandl
-alpha-vantage
-sec-edgar-downloader
+#quandl
+#alpha-vantage
+#sec-edgar-downloader
 
 # visualization
-matplotlib
-plotly
-dash
-mplfinance
+#matplotlib
+#plotly
+#dash
+#mplfinance
 jupyterlab
-pillow
+#pillow
 
 # backtesting
-backtrader
-pyalgotrade
-bt
+#backtrader
+#pyalgotrade
+#bt
 
 # portfolio, performance analysis
-pyfolio
-finquant
+#pyfolio
+#finquant
 
 # web frameworks and extensions
 fastapi
-flask
-flask-cors
-flask-login
-flask-sqlalchemy
-itsdangerous
+#flask
+#flask-cors
+#flask-login
+#flask-sqlalchemy
+#itsdangerous
+jinja2
 aiofiles
-chalice
+#chalice
 
 # servers, task queue
 uvicorn
-gunicorn
-celery
+#gunicorn
+#celery
 
 # networking
 requests
-boto3
-urllib3
+#boto3
+#urllib3
 websocket-client
 websockets
 
 # other data stores, formats
-redis
-h5py
+#redis
+#h5py
 
 # utilities
-beautifulsoup4
-pendulum
-click
-passlib
+#beautifulsoup4
+#pendulum
+#click
+#passlib
 
 # machine learning
-tensorflow
-scikit-learn
-keras
-torch
-opencv-python
+#tensorflow
+#scikit-learn
+#keras
+#torch
+# opencv-python

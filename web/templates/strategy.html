@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    {{strategy.name}}
+{% endblock %}
+
+{% block content %}
+    <h1><a href ="/">Assets</a>
+        <i class = "angle double right icon"></i>
+        {{strategy.name}}
+    </h1>
+
+    <h2>Selected Assets</h2>
+    <table class="ui striped table">
+        <thead>
+            <tr>
+                <th>Exchange</th>
+                <th>Symbol</th>
+                <th>Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for asset in assets %}
+            <tr>
+                <td>
+                    {{asset.exchange}}
+                </td>
+                <td> {{asset.symbol}}
+                    
+                </td>
+                <td>
+                    {{asset.name}}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
