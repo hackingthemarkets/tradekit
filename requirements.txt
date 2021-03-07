@@ -80,9 +80,9 @@ pendulum
 click
 passlib
 
-# machine learning
-tensorflow
-scikit-learn
-keras
-torch
-opencv-python
+###### machine learning
+# tensorflow
+# scikit-learn
+# keras
+# torch
+# opencv-python
