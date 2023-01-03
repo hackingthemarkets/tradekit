@@ -1,25 +1,43 @@
-version: "3.7"
+# version: "3.7"
+
+# services:
+#   timescale:
+#     image: timescale/timescaledb:latest-pg12
+#     container_name: timescale
+#     restart: unless-stopped
+#     ports:
+#       - 5432:5432
+#     environment:
+#       - POSTGRES_USER=tradekit
+#       - POSTGRES_PASSWORD=yourpassword
+#       - POSTGRES_DB=tradekit
+#     volumes:
+#       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+#   web:
+#     build: .
+#     command: uvicorn web.main:app --host 0.0.0.0 --port 80 --reload
+#     volumes:
+#       - .:/app
+#     ports:
+#       - "8000:80"
+#     depends_on:
+#       - timescale
+
+version: '3'
 
 services:
-  timescale:
-    image: timescale/timescaledb:latest-pg12
-    container_name: timescale
-    restart: unless-stopped
-    ports:
-      - 5432:5432
+  mongo:
+    image: mongo:latest
+    container_name: mongo
     environment:
-      - POSTGRES_USER=tradekit
-      - POSTGRES_PASSWORD=yourpassword
-      - POSTGRES_DB=tradekit
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=password
     volumes:
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
-  web:
-    build: .
-    command: uvicorn web.main:app --host 0.0.0.0 --port 80 --reload
-    volumes:
-      - .:/app
+      - mongo-data:/data/db
     ports:
-      - "8000:80"
-    depends_on:
-      - timescale
-    
+      - "27017:27017"
+volumes:
+  mongo-data:
+
+# Use : mongo --username root --password password --authenticationDatabase admin
+#  to connect to the database

@@ -1,4 +1,4 @@
-# TradeKit
+# TradeKit for RMG
 
 Note: I am currently gathering feedback on what to include in this image, this is not "final". I will add more packages based on feedback and eventually freeze the versions. Let me know your thoughts. [Demo Video](https://www.youtube.com/watch?v=uiPMCJ0MEbM)
 
